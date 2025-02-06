@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Token {
+  id            String   @id @default(cuid())
+  address       String   @unique
+  name          String
+  symbol        String
+  decimals      Int      @default(18)
+  logoURI       String?
+  isWhitelisted Boolean  @default(false)
+  isFromCoingecko Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  fromRoutes    Route[]  @relation("FromToken")
+  toRoutes      Route[]  @relation("ToToken")
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  fromToken   Token    @relation("FromToken", fields: [fromTokenId], references: [id])
+  fromTokenId String
+  toToken     Token    @relation("ToToken", fields: [toTokenId], references: [id])
+  toTokenId   String
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([fromTokenId, toTokenId])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  address   String   @unique
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  SUPER_ADMIN
+}
